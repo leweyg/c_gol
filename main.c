@@ -7,6 +7,7 @@ typedef unsigned int uint;
 typedef char GOLCell;
 const GOLCell GOLCell_Empty  = '.';
 const GOLCell GOLCell_Filled = 'X';
+#define GOLCellAlive(v) ((v)==GOLCell_Filled)
 
 typedef struct
 {
@@ -62,6 +63,64 @@ void GOLBoardRelease(GOLBoard* pBoard)
     free(pBoard);
 }
 
+uint GOLBoardAliveNeighborCount(GOLBoard* pBoard, uint x, uint y)
+{
+    uint count = 0;
+    const uint negX = pBoard->Width - 1; // same as -1 in wrapped space
+    const uint negY = pBoard->Height - 1;
+
+    for (uint dy=0; dy<=2; dy++) {
+        uint ny = y + negY + dy;
+
+        for (uint dx=0; dx<=2; dx++) {
+            uint nx = x + negX + dx;
+
+            // exclude the center point:
+            if ((dx == 1) && (dy == 1)) continue;
+
+            GOLCell val = GOLBoardReadSafe(pBoard, nx, ny);
+            if (GOLCellAlive(val)) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+void GOLBoardStep(GOLBoard* pFrom, GOLBoard* pTo)
+{
+    uint w = pFrom->Width;
+    uint h = pTo->Width;
+    if (pTo->Width != pFrom->Width || pTo->Height != pFrom->Height) {
+        printf("ERROR: Mismatched boards during iteration!\n");
+        return;
+    }
+    for (uint y=0; y<h; y++) {
+        for (uint x=0; x<w; x++) {
+            const uint index = GOLBoardIndexSafe(pFrom, x, y);
+
+            // read current:
+            const GOLCell center = pFrom->Cells[index];
+            const uint count = GOLBoardAliveNeighborCount(pFrom, x, y);
+
+            // growth rule:
+            GOLCell nextValue = GOLCell_Empty;
+            if (GOLCellAlive(center)) {
+                if ((count == 2) || (count == 3)) {
+                    nextValue = GOLCell_Filled;
+                }
+            } else {
+                if (count == 3) {
+                    nextValue = GOLCell_Filled;
+                }
+            }
+
+            // write result:
+            pTo->Cells[index] = nextValue;
+        }
+    }
+}
+
 void GOLBoardPrint(GOLBoard* pBoard)
 {
     for (int y=0; y<pBoard->Height; y++) {
@@ -96,6 +155,13 @@ int main(int argc, char* argv[])
     for (uint genIndex=0; genIndex<genMax; genIndex++)
     {
         GOLBoardPrint(front);
+
+        // next step:
+        GOLBoardStep(front, back);
+        // swap front and back:
+        GOLBoard* t = front;
+        front = back;
+        back = t;
     }
 
     printf("Releasing...\n");
