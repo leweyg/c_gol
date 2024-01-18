@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <ctype.h>
 #include <stdio.h>
 
 // GOL = Game of Life
@@ -9,6 +10,11 @@ const GOLCell GOLCell_Empty  = '.';
 const GOLCell GOLCell_Filled = 'X';
 #define GOLCellAlive(v) ((v)==GOLCell_Filled)
 
+// GOLBoardCreate - basic Game of Life board mechansim.
+//  Lifetime: GOLBoardCreate, GOLBoardRelease
+//  Read/Write: GOLBoardReadSafe, GOLBoardWriteSafe
+//  Print/Draw: GOLBoardPrint, GOLBoardDrawNamed
+//  Step: GOLBoardStep
 typedef struct
 {
     uint Width;
@@ -140,6 +146,8 @@ void GOLBoardPrint(GOLBoard* pBoard)
     printf("\n");
 }
 
+// GOLBoard filling/drawing:
+
 void GOLBoardDrawBlinker(GOLBoard* pBoard) {
     GOLBoardWriteSafe(pBoard, 4, 3, GOLCell_Filled);
     GOLBoardWriteSafe(pBoard, 4, 4, GOLCell_Filled);
@@ -186,6 +194,12 @@ static int custom_charicmp(char a, char b)
 
 static int custom_stricmp(const char* cstrA, const char* cstrB)
 {
+    if ((!cstrA) && (!cstrB)) {
+        return 0;
+    }
+    if ((!cstrA) || (!cstrB)) {
+        return (cstrA ? 1 : -1);
+    }
     const char* a = cstrA;
     const char* b = cstrB;
     int res = custom_charicmp(*a, *b);
@@ -234,7 +248,7 @@ int main(int argc, char* argv[])
 
         // next step:
         GOLBoardStep(front, back);
-        // swap front and back:
+        // swap front and back buffer:
         GOLBoard* t = front;
         front = back;
         back = t;
