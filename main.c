@@ -119,8 +119,10 @@ void GOLBoardStep(GOLBoard* pFrom, GOLBoard* pTo)
         printf("ERROR: Mismatched boards during iteration!\n");
         return;
     }
+
     for (uint y=0; y<h; y++) {
         for (uint x=0; x<w; x++) {
+            // NOTE: this could be safely parallelized:
             GOLBoardStepCell(pFrom, pTo, x, y);
         }
     }
@@ -144,17 +146,87 @@ void GOLBoardDrawBlinker(GOLBoard* pBoard) {
     GOLBoardWriteSafe(pBoard, 4, 5, GOLCell_Filled);
 }
 
+void GOLBoardDrawToad(GOLBoard* pBoard) {
+    GOLBoardWriteSafe(pBoard, 3, 3, GOLCell_Filled);
+    GOLBoardWriteSafe(pBoard, 4, 3, GOLCell_Filled);
+    GOLBoardWriteSafe(pBoard, 5, 3, GOLCell_Filled);
+    GOLBoardWriteSafe(pBoard, 2, 4, GOLCell_Filled);
+    GOLBoardWriteSafe(pBoard, 3, 4, GOLCell_Filled);
+    GOLBoardWriteSafe(pBoard, 4, 4, GOLCell_Filled);
+}
+
+void GOLBoardDrawCube(GOLBoard* pBoard, uint x, uint y)
+{
+    GOLBoardWriteSafe(pBoard, x+0, y+0, GOLCell_Filled);
+    GOLBoardWriteSafe(pBoard, x+1, y+0, GOLCell_Filled);
+    GOLBoardWriteSafe(pBoard, x+0, y+1, GOLCell_Filled);
+    GOLBoardWriteSafe(pBoard, x+1, y+1, GOLCell_Filled);
+}
+
+void GOLBoardDrawBeacon(GOLBoard* pBoard) {
+    GOLBoardDrawCube(pBoard, 5, 1);
+    GOLBoardDrawCube(pBoard, 3, 3);
+}
+
+void GOLBoardDrawRandom(GOLBoard* pBoard) {
+    uint n = pBoard->CellCount;
+    for (uint index=0; index<n; index++) {
+        if ((rand()%2) == 0) {
+            pBoard->Cells[index] = GOLCell_Filled;
+        }
+    }
+}
+
+static int custom_charicmp(char a, char b)
+{
+    int la = tolower(a);
+    int lb = tolower(b);
+    return (la - lb);
+}
+
+static int custom_stricmp(const char* cstrA, const char* cstrB)
+{
+    const char* a = cstrA;
+    const char* b = cstrB;
+    int res = custom_charicmp(*a, *b);
+    while ((res==0) && *a) {
+        a++;
+        b++;
+        res = custom_charicmp(*a, *b);
+    }
+    return res;
+}
+
+void GOLBoardDrawNamed(GOLBoard* pBoard, const char* name) {
+    const char* defaultName = "RANDOM";
+    if (!name) {
+        name = defaultName;
+    }
+    if (custom_stricmp(name, "Blinker")==0) {
+        GOLBoardDrawBlinker(pBoard);
+    } else if (custom_stricmp(name, "Toad")==0) {
+        GOLBoardDrawToad(pBoard);
+    } else if (custom_stricmp(name, "Beacon")==0) {
+        GOLBoardDrawBeacon(pBoard);
+    } else {
+        // default or RANDOM:
+        name = defaultName;
+        GOLBoardDrawRandom(pBoard);
+    }
+    printf("%s\n", name);
+}
+
 int main(int argc, char* argv[])
 {
-    printf("Starting...\n");
+    //printf("Starting...\n");
     uint boardSize = 8;
     GOLBoard* front = GOLBoardCreate(boardSize, boardSize);
     GOLBoard* back = GOLBoardCreate(boardSize, boardSize);
 
-    printf("Seeding...\n");
-    GOLBoardDrawBlinker(front);
+    //printf("Seeding...\n");
+    GOLBoardDrawNamed(front, (argc > 1) ? argv[1] : NULL);
 
-    printf("Generations...\n");
+    //printf("Generations...\n");
     uint genMax = 4;
     for (uint genIndex=0; genIndex<genMax; genIndex++)
     {
@@ -168,10 +240,10 @@ int main(int argc, char* argv[])
         back = t;
     }
 
-    printf("Releasing...\n");
+    //printf("Releasing...\n");
     GOLBoardRelease(front);
     GOLBoardRelease(back);
 
-    printf("Done...\n");
+    //printf("Done...\n");
     return 0;
 }
