@@ -87,6 +87,30 @@ uint GOLBoardAliveNeighborCount(GOLBoard* pBoard, uint x, uint y)
     return count;
 }
 
+void GOLBoardStepCell(GOLBoard* pFrom, GOLBoard* pTo, uint x, uint y)
+{
+    const uint index = GOLBoardIndexSafe(pFrom, x, y);
+
+    // read current:
+    const GOLCell center = pFrom->Cells[index];
+    const uint count = GOLBoardAliveNeighborCount(pFrom, x, y);
+
+    // growth rule:
+    GOLCell nextValue = GOLCell_Empty;
+    if (GOLCellAlive(center)) {
+        if ((count == 2) || (count == 3)) {
+            nextValue = GOLCell_Filled;
+        }
+    } else {
+        if (count == 3) {
+            nextValue = GOLCell_Filled;
+        }
+    }
+
+    // write result:
+    pTo->Cells[index] = nextValue;
+}
+
 void GOLBoardStep(GOLBoard* pFrom, GOLBoard* pTo)
 {
     uint w = pFrom->Width;
@@ -97,26 +121,7 @@ void GOLBoardStep(GOLBoard* pFrom, GOLBoard* pTo)
     }
     for (uint y=0; y<h; y++) {
         for (uint x=0; x<w; x++) {
-            const uint index = GOLBoardIndexSafe(pFrom, x, y);
-
-            // read current:
-            const GOLCell center = pFrom->Cells[index];
-            const uint count = GOLBoardAliveNeighborCount(pFrom, x, y);
-
-            // growth rule:
-            GOLCell nextValue = GOLCell_Empty;
-            if (GOLCellAlive(center)) {
-                if ((count == 2) || (count == 3)) {
-                    nextValue = GOLCell_Filled;
-                }
-            } else {
-                if (count == 3) {
-                    nextValue = GOLCell_Filled;
-                }
-            }
-
-            // write result:
-            pTo->Cells[index] = nextValue;
+            GOLBoardStepCell(pFrom, pTo, x, y);
         }
     }
 }
@@ -138,7 +143,6 @@ void GOLBoardDrawBlinker(GOLBoard* pBoard) {
     GOLBoardWriteSafe(pBoard, 4, 4, GOLCell_Filled);
     GOLBoardWriteSafe(pBoard, 4, 5, GOLCell_Filled);
 }
-
 
 int main(int argc, char* argv[])
 {
