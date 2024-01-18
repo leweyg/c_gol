@@ -6,4 +6,6 @@ rm c_gol_exe
 gcc -std=c99 -o c_gol_exe main.c -lm
 
 # test:
-./c_gol_exe
+./c_gol_exe BLINKER
+
+
