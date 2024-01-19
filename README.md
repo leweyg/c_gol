@@ -1,6 +1,10 @@
 # c_gol
 C99 Game Of Life - mostly for fun
 
-# Compile using gcc (for C99) and test:
+# For Windows
+In a 'Developer Command Prompt':
+compile_cl.bat
+
+# For Mac/unix:
 ./compile_gcc.sh
 

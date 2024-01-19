@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <stdio.h>
 
 // GOL = Game of Life
 
@@ -8,7 +8,7 @@ typedef unsigned int uint;
 typedef char GOLCell;
 const GOLCell GOLCell_Empty  = '.';
 const GOLCell GOLCell_Filled = 'X';
-#define GOLCellAlive(v) ((v)==GOLCell_Filled)
+#define GOLCELL_ALIVE(v) ((v)==GOLCell_Filled)
 
 // GOLBoardCreate - basic Game of Life board mechansim.
 //  Lifetime: GOLBoardCreate, GOLBoardRelease
@@ -32,7 +32,7 @@ void GOLBoardFill(GOLBoard* pBoard, GOLCell val)
     }
 }
 
-uint GOLBoardIndexSafe(GOLBoard* pBoard, uint x, uint y)
+uint GOLBoardIndexSafe(const GOLBoard* pBoard, uint x, uint y)
 {
     uint sx = (x % pBoard->Width);
     uint sy = (y % pBoard->Height);
@@ -40,7 +40,7 @@ uint GOLBoardIndexSafe(GOLBoard* pBoard, uint x, uint y)
     return index;
 }
 
-GOLCell GOLBoardReadSafe(GOLBoard* pBoard, uint x, uint y)
+GOLCell GOLBoardReadSafe(const GOLBoard* pBoard, uint x, uint y)
 {
     uint index = GOLBoardIndexSafe(pBoard, x, y);
     return pBoard->Cells[index];
@@ -69,7 +69,7 @@ void GOLBoardRelease(GOLBoard* pBoard)
     free(pBoard);
 }
 
-uint GOLBoardAliveNeighborCount(GOLBoard* pBoard, uint x, uint y)
+uint GOLBoardAliveNeighborCount(const GOLBoard* pBoard, uint x, uint y)
 {
     uint count = 0;
     const uint negX = pBoard->Width - 1; // same as -1 in wrapped space
@@ -85,7 +85,7 @@ uint GOLBoardAliveNeighborCount(GOLBoard* pBoard, uint x, uint y)
             if ((dx == 1) && (dy == 1)) continue;
 
             GOLCell val = GOLBoardReadSafe(pBoard, nx, ny);
-            if (GOLCellAlive(val)) {
+            if (GOLCELL_ALIVE(val)) {
                 count++;
             }
         }
@@ -93,7 +93,7 @@ uint GOLBoardAliveNeighborCount(GOLBoard* pBoard, uint x, uint y)
     return count;
 }
 
-void GOLBoardStepCell(GOLBoard* pFrom, GOLBoard* pTo, uint x, uint y)
+void GOLBoardStepCell(const GOLBoard* pFrom, GOLBoard* pTo, uint x, uint y)
 {
     const uint index = GOLBoardIndexSafe(pFrom, x, y);
 
@@ -103,7 +103,7 @@ void GOLBoardStepCell(GOLBoard* pFrom, GOLBoard* pTo, uint x, uint y)
 
     // growth rule:
     GOLCell nextValue = GOLCell_Empty;
-    if (GOLCellAlive(center)) {
+    if (GOLCELL_ALIVE(center)) {
         if ((count == 2) || (count == 3)) {
             nextValue = GOLCell_Filled;
         }
@@ -117,7 +117,7 @@ void GOLBoardStepCell(GOLBoard* pFrom, GOLBoard* pTo, uint x, uint y)
     pTo->Cells[index] = nextValue;
 }
 
-void GOLBoardStep(GOLBoard* pFrom, GOLBoard* pTo)
+void GOLBoardStep(const GOLBoard* pFrom, GOLBoard* pTo)
 {
     uint w = pFrom->Width;
     uint h = pTo->Width;
@@ -134,7 +134,7 @@ void GOLBoardStep(GOLBoard* pFrom, GOLBoard* pTo)
     }
 }
 
-void GOLBoardPrint(GOLBoard* pBoard)
+void GOLBoardPrint(const GOLBoard* pBoard)
 {
     for (int y=0; y<pBoard->Height; y++) {
         for (int x=0; x<pBoard->Width; x++) {
